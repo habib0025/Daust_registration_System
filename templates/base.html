@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Course Registration System{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-brand">
+            <a href="/">DAUST Registration</a>
+        </div>
+        
+        <div class="nav-links">
+            {% if session.get('role') == 'Administrator' %}
+                <a href="{{ url_for('admin_dashboard') }}">Dashboard</a>
+                <a href="{{ url_for('admin_catalog') }}">Catalog</a>
+                <a href="{{ url_for('admin_window') }}">Windows</a>
+                <a href="{{ url_for('admin_override') }}">Overrides</a>
+            {% elif session.get('role') == 'Student' %}
+                <a href="{{ url_for('student_dashboard') }}">Dashboard</a>
+                <a href="{{ url_for('student_search') }}">Search Courses</a>
+                <a href="{{ url_for('student_schedule') }}">My Schedule</a>
+            {% endif %}
+        </div>
+
+        <div class="navbar-user">
+            {% if session.get('user_id') %}
+                <span class="user-badge">{{ session.get('name') }} ({{ session.get('role') }})</span>
+                <a href="{{ url_for('logout') }}" class="btn btn-primary" style="border: 1px solid white;">Logout</a>
+            {% else %}
+                <a href="{{ url_for('login') }}">Login</a>
+            {% endif %}
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="alerts-container">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+        </div>
+
+        {% block content %}
+        {% endblock %}
+    </div>
+</body>
+</html>

@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+{% block title %}Register - DAUST Registration{% endblock %}
+{% block content %}
+<div class="content-box">
+    <h2>Registration: {{ section.courseCode }} - {{ section.title }}</h2>
+    <p>Time Slot: {{ section.timeSlot }} | Capacity: {{ section.currentEnrolled }}/{{ section.maxCapacity }}</p>
+
+    <h3 style="margin-top: 2rem;">Validation Engine Checks</h3>
+    
+    <ul class="validation-checklist">
+        <!-- Visibility -->
+        <li class="validation-item {% if results.visibility[0] %}pass{% else %}fail{% endif %}">
+            <div class="validation-icon">{% if results.visibility[0] %}✅{% else %}❌{% endif %}</div>
+            <div>
+                <strong>Section Visibility (BR-5):</strong> 
+                {{ results.visibility[1] }}
+            </div>
+        </li>
+
+        <!-- Window -->
+        <li class="validation-item {% if results.window[0] %}pass{% else %}fail{% endif %}">
+            <div class="validation-icon">{% if results.window[0] %}✅{% else %}❌{% endif %}</div>
+            <div>
+                <strong>Registration Window (BR-4):</strong> 
+                {{ results.window[1] }}
+            </div>
+        </li>
+
+        <!-- Prerequisites -->
+        <li class="validation-item {% if results.prereq[0] %}pass{% else %}fail{% endif %}">
+            <div class="validation-icon">{% if results.prereq[0] %}✅{% else %}❌{% endif %}</div>
+            <div>
+                <strong>Prerequisites (BR-1):</strong> 
+                {{ results.prereq[1] }}
+            </div>
+        </li>
+
+        <!-- Conflict -->
+        <li class="validation-item {% if results.conflict[0] %}pass{% else %}fail{% endif %}">
+            <div class="validation-icon">{% if results.conflict[0] %}✅{% else %}❌{% endif %}</div>
+            <div>
+                <strong>Schedule Conflict (BR-2):</strong> 
+                {{ results.conflict[1] }}
+            </div>
+        </li>
+
+        <!-- Capacity -->
+        <li class="validation-item {% if results.capacity[0] %}pass{% else %}warning{% endif %}" 
+            {% if not results.capacity[0] %}style="border-left-color: var(--warning); background-color: var(--warning-bg);"{% endif %}>
+            <div class="validation-icon">{% if results.capacity[0] %}✅{% else %}⚠️{% endif %}</div>
+            <div>
+                <strong>Section Capacity (BR-3):</strong> 
+                {{ results.capacity[1] }}
+            </div>
+        </li>
+    </ul>
+
+    <div style="margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--border);">
+        {% if results.already_enrolled %}
+            <p style="color: var(--warning); font-weight: bold;">You are already enrolled in this section.</p>
+            <a href="{{ url_for('student_schedule') }}" class="btn btn-primary">Go to My Schedule</a>
+        {% elif not results.visibility[0] or not results.window[0] or not results.prereq[0] or not results.conflict[0] %}
+            <!-- Hard stop failures -->
+            <button class="btn btn-primary" disabled style="opacity: 0.5; cursor: not-allowed;">Registration Blocked</button>
+        {% elif not results.capacity[0] %}
+            <!-- Waitlist option -->
+            <form method="POST" action="{{ url_for('student_waitlist', section_id=section.sectionID) }}" style="display:inline;">
+                <button type="submit" class="btn btn-warning" style="background-color: var(--warning); color: white; border:none; padding:0.6rem 1.2rem; border-radius:8px; cursor:pointer; font-weight:600;">Join Waitlist</button>
+            </form>
+        {% else %}
+            <!-- Success option -->
+            <form method="POST" action="{{ url_for('student_register_action', section_id=section.sectionID) }}" style="display:inline;">
+                <button type="submit" class="btn btn-success">Confirm Registration</button>
+            </form>
+        {% endif %}
+        
+        <a href="{{ url_for('student_search') }}" class="btn" style="margin-left: 1rem; border: 1px solid var(--border);">Cancel</a>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% block title %}Search Courses - DAUST Registration{% endblock %}
+{% block content %}
+<div class="content-box">
+    <h2>Available Course Sections</h2>
+    <p style="margin-bottom: 2rem;">Select a course to view details and register.</p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Course Code</th>
+                <th>Title</th>
+                <th>Department</th>
+                <th>Credits</th>
+                <th>Time Slot</th>
+                <th>Instructor</th>
+                <th>Room</th>
+                <th>Status/Capacity</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for sec in sections %}
+            <tr>
+                <td><strong>{{ sec.courseCode }}</strong></td>
+                <td>{{ sec.title }}</td>
+                <td>{{ sec.deptName }}</td>
+                <td>{{ sec.credits }}</td>
+                <td>{{ sec.timeSlot }}</td>
+                <td>{{ sec.instructorName }}</td>
+                <td>{{ sec.roomNumber }}</td>
+                <td>
+                    {% if sec.status == 'Full' %}
+                        <span class="badge badge-orange">Waitlist Only</span> ({{ sec.currentEnrolled }}/{{ sec.maxCapacity }})
+                    {% else %}
+                        <span class="badge badge-green">Open</span> ({{ sec.currentEnrolled }}/{{ sec.maxCapacity }})
+                    {% endif %}
+                </td>
+                <td>
+                    <a href="{{ url_for('student_register_confirm', section_id=sec.sectionID) }}" class="btn btn-primary" style="padding: 0.3rem 0.8rem; font-size: 0.85rem;">View / Register</a>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="9" style="text-align: center;">No sections available.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

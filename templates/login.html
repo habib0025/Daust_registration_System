@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% block title %}Login - DAUST Registration{% endblock %}
+
+{% block content %}
+<div class="center-box content-box">
+    <h2 style="text-align: center;">System Login</h2>
+    <p style="text-align: center; color: var(--text-muted); margin-bottom: 1.5rem;">Enter your credentials to continue</p>
+    
+    <form method="POST" action="{{ url_for('login') }}">
+        <div class="form-group">
+            <label for="email">Email Address</label>
+            <input type="email" id="email" name="email" required placeholder="name@daust.edu" autofocus>
+        </div>
+        
+        <div class="form-group">
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" required placeholder="••••••••">
+        </div>
+        
+        <button type="submit" class="btn btn-primary btn-block">Sign In</button>
+    </form>
+    
+    <div style="margin-top: 1.5rem; text-align: center; font-size: 0.85rem; color: #888;">
+        <p>Demo accounts (password: student123 or admin123):</p>
+        <p>student1@daust.edu | admin@daust.edu</p>
+    </div>
+</div>
+{% endblock %}

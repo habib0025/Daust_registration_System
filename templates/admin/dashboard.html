@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block title %}Admin Dashboard - DAUST Registration{% endblock %}
+{% block content %}
+<div class="content-box">
+    <h2>Administrator Dashboard</h2>
+    <p style="color: var(--text-muted);">Overview of the registration system.</p>
+</div>
+
+<div class="dashboard-stats">
+    <div class="stat-card">
+        <h3>Total Students</h3>
+        <p class="stat-value">{{ stats.students }}</p>
+    </div>
+    <div class="stat-card">
+        <h3>Total Sections</h3>
+        <p class="stat-value">{{ stats.sections }}</p>
+    </div>
+    <div class="stat-card">
+        <h3>Active Enrollments</h3>
+        <p class="stat-value">{{ stats.enrollments }}</p>
+    </div>
+    <div class="stat-card">
+        <h3>Students Waitlisted</h3>
+        <p class="stat-value">{{ stats.waitlists }}</p>
+    </div>
+</div>
+{% endblock %}

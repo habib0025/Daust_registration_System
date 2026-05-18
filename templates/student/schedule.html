@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% block title %}My Schedule - DAUST Registration{% endblock %}
+{% block content %}
+<div class="content-box">
+    <h2>My Schedule</h2>
+    <p style="margin-bottom: 2rem;">Manage your active enrollments here.</p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Course Code</th>
+                <th>Title</th>
+                <th>Time Slot</th>
+                <th>Room</th>
+                <th>Instructor</th>
+                <th>Status</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for enr in enrollments %}
+            <tr>
+                <td><strong>{{ enr.courseCode }}</strong></td>
+                <td>{{ enr.title }}</td>
+                <td>{{ enr.timeSlot }}</td>
+                <td>{{ enr.roomNumber }}</td>
+                <td>{{ enr.instructorName }}</td>
+                <td>
+                    {% if enr.status == 'Active' %}
+                        <span class="badge badge-green">{{ enr.status }}</span>
+                    {% else %}
+                        <span class="badge badge-red">{{ enr.status }}</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if enr.status == 'Active' %}
+                    <form method="POST" action="{{ url_for('student_drop', enrollment_id=enr.enrollmentID) }}" style="display:inline;" onsubmit="return confirm('Are you sure you want to drop this course?');">
+                        <button type="submit" class="btn btn-danger" style="padding: 0.3rem 0.8rem; font-size: 0.85rem;">Drop</button>
+                    </form>
+                    {% else %}
+                    -
+                    {% endif %}
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="7" style="text-align: center;">You have no active enrollments.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

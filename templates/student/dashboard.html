@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard - DAUST Registration{% endblock %}
+{% block content %}
+<div class="content-box">
+    <h2>Welcome to your Dashboard, {{ session.get('name') }}!</h2>
+    <p style="color: var(--text-muted);">View your academic standing and quick registration info below.</p>
+</div>
+
+<div class="dashboard-stats">
+    <div class="stat-card">
+        <h3>Major</h3>
+        <p class="stat-value" style="font-size: 1.5rem;">{{ student.major }}</p>
+    </div>
+    <div class="stat-card">
+        <h3>Completed Credits</h3>
+        <p class="stat-value">{{ student.completedCredits }}</p>
+    </div>
+    <div class="stat-card">
+        <h3>Current Credits</h3>
+        <p class="stat-value">{{ active_credits }}</p>
+    </div>
+    <div class="stat-card">
+        <h3>Eligibility Status</h3>
+        <p class="stat-value">
+            {% if student.eligibilityStatus == 'Eligible' %}
+                <span class="badge badge-green">{{ student.eligibilityStatus }}</span>
+            {% else %}
+                <span class="badge badge-red">{{ student.eligibilityStatus }}</span>
+            {% endif %}
+        </p>
+    </div>
+</div>
+
+<div style="display: flex; gap: 1rem;">
+    <a href="{{ url_for('student_search') }}" class="btn btn-primary">Search for Courses</a>
+    <a href="{{ url_for('student_schedule') }}" class="btn btn-success" style="background-color: var(--primary-dark);">View My Schedule</a>
+</div>
+{% endblock %}

@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% block title %}Section Roster - DAUST Registration{% endblock %}
+{% block content %}
+<div class="content-box">
+    <h2>Section Roster: {{ section.courseCode }} - {{ section.title }}</h2>
+    <p>Instructor: {{ section.instructorName }} | Status: {{ section.status }} | Enrolled: {{ section.currentEnrolled }}/{{ section.maxCapacity }}</p>
+
+    <h3 style="margin-top: 2rem; margin-bottom: 1rem;">Enrolled Students</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Student Name</th>
+                <th>Email</th>
+                <th>Major</th>
+                <th>Enrollment Date</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for student in roster %}
+            <tr>
+                <td><strong>{{ student.name }}</strong></td>
+                <td>{{ student.email }}</td>
+                <td>{{ student.major }}</td>
+                <td>{{ student.enrollmentDate }}</td>
+                <td>
+                    {% if student.status == 'Active' or student.status == 'Override-Active' %}
+                        <span class="badge badge-green">{{ student.status }}</span>
+                    {% else %}
+                        <span class="badge badge-red">{{ student.status }}</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="5" style="text-align: center;">No students enrolled.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    
+    <a href="{{ url_for('admin_catalog') }}" class="btn" style="margin-top: 1rem; border: 1px solid var(--border);">Back to Catalog</a>
+</div>
+{% endblock %}

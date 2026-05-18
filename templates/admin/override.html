@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% block title %}Manual Override - DAUST Registration{% endblock %}
+{% block content %}
+<div class="content-box" style="max-width: 600px; margin: 0 auto;">
+    <h2>Manual Registration Override</h2>
+    <p style="margin-bottom: 2rem; color: var(--error);">Warning: This action bypasses all validation checks (Prerequisites, Capacity, Window, Conflicts).</p>
+
+    <form method="POST" action="{{ url_for('admin_override') }}">
+        <div class="form-group">
+            <label for="student_email">Student Email Address</label>
+            <input type="email" id="student_email" name="student_email" required placeholder="student1@daust.edu">
+        </div>
+        
+        <div class="form-group">
+            <label for="course_code">Section Course Code</label>
+            <input type="text" id="course_code" name="course_code" required placeholder="CS101">
+        </div>
+        
+        <button type="submit" class="btn btn-danger btn-block">Force Enroll Student</button>
+    </form>
+</div>
+{% endblock %}

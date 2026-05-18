@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% block title %}Manage Catalog - DAUST Registration{% endblock %}
+{% block content %}
+<div class="content-box">
+    <h2>Course Catalog Management</h2>
+    <p style="margin-bottom: 2rem;">Publish or close sections for registration.</p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Course</th>
+                <th>Instructor</th>
+                <th>Room</th>
+                <th>Time</th>
+                <th>Enrolled/Max</th>
+                <th>Status</th>
+                <th>Toggle Status</th>
+                <th>Roster</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for sec in sections %}
+            <tr>
+                <td><strong>{{ sec.courseCode }}</strong></td>
+                <td>{{ sec.instructorName }}</td>
+                <td>{{ sec.roomNumber }}</td>
+                <td>{{ sec.timeSlot }}</td>
+                <td>{{ sec.currentEnrolled }}/{{ sec.maxCapacity }}</td>
+                <td>
+                    {% if sec.status == 'Published' %}
+                        <span class="badge badge-green">Published</span>
+                    {% elif sec.status == 'Draft' %}
+                        <span class="badge badge-blue">Draft</span>
+                    {% elif sec.status == 'Full' %}
+                        <span class="badge badge-orange">Full</span>
+                    {% else %}
+                        <span class="badge badge-red">{{ sec.status }}</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <form method="POST" action="{{ url_for('admin_catalog') }}" style="display:inline;">
+                        <input type="hidden" name="section_id" value="{{ sec.sectionID }}">
+                        <select name="new_status" onchange="this.form.submit()" style="padding: 0.2rem; font-size: 0.85rem; width: auto;">
+                            <option value="" disabled selected>Change...</option>
+                            <option value="Draft">Draft</option>
+                            <option value="Published">Publish</option>
+                            <option value="Closed">Close</option>
+                            <option value="Cancelled">Cancel</option>
+                        </select>
+                    </form>
+                </td>
+                <td>
+                    <a href="{{ url_for('admin_roster', section_id=sec.sectionID) }}" class="btn btn-primary" style="padding: 0.2rem 0.6rem; font-size:0.8rem;">View</a>
+                </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="8">No sections found.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
