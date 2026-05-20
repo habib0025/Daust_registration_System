@@ -357,3 +357,39 @@ tbody tr:hover {
     max-width: 400px;
     margin: 4rem auto;
 }
+
+/* Responsive Design (Mobile) */
+@media (max-width: 768px) {
+    .navbar {
+        flex-direction: column;
+        text-align: center;
+        gap: 1rem;
+        padding: 1rem;
+    }
+
+    .nav-links {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 1rem;
+    }
+
+    .navbar-user {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .dashboard-stats {
+        grid-template-columns: 1fr;
+    }
+
+    .content-box {
+        padding: 1.5rem 1rem;
+    }
+
+    /* Make tables horizontally scrollable on small screens */
+    table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+}
