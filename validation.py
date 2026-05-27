@@ -1,8 +1,8 @@
 from datetime import datetime
-from database import DatabaseConnection
+from database import get_db
 
 def _get_db():
-    return DatabaseConnection.get_instance().cursor()
+    return get_db().cursor()
 
 def check_registration_window_open(term_id):
     cursor = _get_db()
@@ -86,7 +86,7 @@ def check_section_visibility(section_id):
     cursor = _get_db()
     cursor.execute("SELECT status FROM Sections WHERE sectionID = ?", (section_id,))
     row = cursor.fetchone()
-    if not row or row['status'] != 'Published':
+    if not row or row['status'] not in ('Published', 'Full'):
         return False, "Section is not visible or published."
     return True, "Section is visible"
 

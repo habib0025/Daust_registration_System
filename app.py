@@ -4,7 +4,7 @@ from werkzeug.security import check_password_hash
 from functools import wraps
 from datetime import datetime
 
-from database import DatabaseConnection
+from database import get_db, init_app, initialize_schema
 import seed_data
 import validation
 
@@ -24,13 +24,13 @@ import validation
 app = Flask(__name__)
 app.secret_key = 'super_secret_key_for_daust_prototype_only'
 
+init_app(app)
+
 def init_db():
     # Automatically initialize and seed DB if missing
-    conn = DatabaseConnection.get_instance()
-    seed_data.seed_database(conn)
-
-def get_db():
-    return DatabaseConnection.get_instance().cursor()
+    db = get_db()
+    initialize_schema(db)
+    seed_data.seed_database(db)
 
 # ------------------------------------------
 # Authentication Decorators
@@ -75,7 +75,8 @@ def login():
         email = request.form['email']
         password = request.form['password']
         
-        cursor = get_db()
+        db = get_db()
+        cursor = db.cursor()
         cursor.execute("SELECT * FROM Users WHERE email = ?", (email,))
         user = cursor.fetchone()
         
@@ -104,7 +105,8 @@ def logout():
 @login_required
 @role_required('Student')
 def student_dashboard():
-    cursor = get_db()
+    db = get_db()
+    cursor = db.cursor()
     cursor.execute("SELECT major, completedCredits, eligibilityStatus FROM Students WHERE userID = ?", (session['user_id'],))
     student_info = cursor.fetchone()
     
@@ -118,7 +120,8 @@ def student_dashboard():
 @login_required
 @role_required('Student')
 def student_search():
-    cursor = get_db()
+    db = get_db()
+    cursor = db.cursor()
     
     # Query only Published sections
     cursor.execute('''
@@ -139,7 +142,8 @@ def student_search():
 @login_required
 @role_required('Student')
 def student_schedule():
-    cursor = get_db()
+    db = get_db()
+    cursor = db.cursor()
     cursor.execute('''
         SELECT e.enrollmentID, s.sectionID, c.courseCode, c.title, s.timeSlot, r.roomNumber, u.name as instructorName, e.status
         FROM EnrollmentRecords e
@@ -159,7 +163,8 @@ def student_schedule():
 @role_required('Student')
 def student_register_confirm(section_id):
     student_id = session['user_id']
-    cursor = get_db()
+    db = get_db()
+    cursor = db.cursor()
     
     # Get section details
     cursor.execute('''
@@ -203,7 +208,8 @@ def student_register_confirm(section_id):
 def student_register_action(section_id):
     student_id = session['user_id']
     
-    cursor = get_db()
+    db = get_db()
+    cursor = db.cursor()
     cursor.execute("SELECT status FROM EnrollmentRecords WHERE studentID = ? AND sectionID = ?", (student_id, section_id))
     existing = cursor.fetchone()
     if existing and existing['status'] == 'Active':
@@ -223,12 +229,11 @@ def student_register_action(section_id):
 
     # All checks passed, perform registration
     import uuid
-    conn = DatabaseConnection.get_instance()
     try:
         cursor.execute("UPDATE Sections SET currentEnrolled = currentEnrolled + 1 WHERE sectionID = ?", (section_id,))
         cursor.execute("INSERT INTO EnrollmentRecords (enrollmentID, studentID, sectionID, enrollmentDate, status, isOverride) VALUES (?, ?, ?, ?, 'Active', 0)",
                       (str(uuid.uuid4()), student_id, section_id, datetime.now().strftime("%Y-%m-%d")))
-        conn.commit()
+        db.commit()
         
         # Get course title for success message
         cursor.execute("SELECT c.title FROM Sections s JOIN Courses c ON s.courseID = c.courseID WHERE s.sectionID = ?", (section_id,))
@@ -237,7 +242,7 @@ def student_register_action(section_id):
         flash(f"Successfully registered for {title}.", "success")
         return redirect(url_for('student_schedule'))
     except Exception as e:
-        conn.rollback()
+        db.rollback()
         flash(f"Database error occurred: {str(e)}", "error")
         return redirect(url_for('student_search'))
 
@@ -246,7 +251,8 @@ def student_register_action(section_id):
 @role_required('Student')
 def student_waitlist(section_id):
     student_id = session['user_id']
-    cursor = get_db()
+    db = get_db()
+    cursor = db.cursor()
     
     # Check if already waitlisted
     cursor.execute("SELECT * FROM Waitlist WHERE studentID=? AND sectionID=?", (student_id, section_id))
@@ -260,14 +266,13 @@ def student_waitlist(section_id):
     next_pos = (res['maxPos'] or 0) + 1
 
     import uuid
-    conn = DatabaseConnection.get_instance()
     try:
         cursor.execute("INSERT INTO Waitlist (waitlistID, studentID, sectionID, queuePosition, requestDate, status) VALUES (?,?,?,?,?,?)",
                       (str(uuid.uuid4()), student_id, section_id, next_pos, datetime.now().strftime("%Y-%m-%d"), 'Queued'))
-        conn.commit()
+        db.commit()
         flash(f"Successfully joined waitlist. Your position is: {next_pos}.", "success")
     except Exception as e:
-        conn.rollback()
+        db.rollback()
         flash(f"Database error: {str(e)}", "error")
         
     return redirect(url_for('student_schedule'))
@@ -277,7 +282,8 @@ def student_waitlist(section_id):
 @role_required('Student')
 def student_drop(enrollment_id):
     student_id = session['user_id']
-    cursor = get_db()
+    db = get_db()
+    cursor = db.cursor()
     
     cursor.execute("SELECT sectionID, status FROM EnrollmentRecords WHERE enrollmentID=? AND studentID=?", (enrollment_id, student_id))
     record = cursor.fetchone()
@@ -286,14 +292,13 @@ def student_drop(enrollment_id):
         flash("Invalid enrollment record.", "error")
         return redirect(url_for('student_schedule'))
         
-    conn = DatabaseConnection.get_instance()
     try:
         cursor.execute("UPDATE EnrollmentRecords SET status='Dropped' WHERE enrollmentID=?", (enrollment_id,))
         cursor.execute("UPDATE Sections SET currentEnrolled = currentEnrolled - 1 WHERE sectionID=?", (record['sectionID'],))
-        conn.commit()
+        db.commit()
         flash("Successfully dropped the course.", "success")
     except Exception as e:
-        conn.rollback()
+        db.rollback()
         flash("Error dropping course.", "error")
         
     return redirect(url_for('student_schedule'))
@@ -305,7 +310,8 @@ def student_drop(enrollment_id):
 @login_required
 @role_required('Administrator')
 def admin_dashboard():
-    cursor = get_db()
+    db = get_db()
+    cursor = db.cursor()
     
     # Simple aggregates
     cursor.execute("SELECT COUNT(*) as cnt FROM Students")
@@ -332,14 +338,14 @@ def admin_dashboard():
 @login_required
 @role_required('Administrator')
 def admin_catalog():
-    cursor = get_db()
+    db = get_db()
+    cursor = db.cursor()
     if request.method == 'POST':
         section_id = request.form.get('section_id')
         new_status = request.form.get('new_status')
         if section_id and new_status:
-            conn = DatabaseConnection.get_instance()
             cursor.execute("UPDATE Sections SET status = ? WHERE sectionID = ?", (new_status, section_id))
-            conn.commit()
+            db.commit()
             flash(f"Section status updated to {new_status}.", "success")
         return redirect(url_for('admin_catalog'))
         
@@ -358,7 +364,8 @@ def admin_catalog():
 @login_required
 @role_required('Administrator')
 def admin_window():
-    cursor = get_db()
+    db = get_db()
+    cursor = db.cursor()
     
     if request.method == 'POST':
         window_id = request.form.get('window_id')
@@ -367,13 +374,12 @@ def admin_window():
         drop = request.form.get('dropDeadline')
         withd = request.form.get('withdrawDeadline')
         
-        conn = DatabaseConnection.get_instance()
         cursor.execute('''
             UPDATE RegistrationWindows 
             SET startDate=?, endDate=?, dropDeadline=?, withdrawDeadline=?
             WHERE windowID=?
         ''', (start, end, drop, withd, window_id))
-        conn.commit()
+        db.commit()
         flash("Registration window updated successfully.", "success")
         return redirect(url_for('admin_window'))
         
@@ -390,7 +396,8 @@ def admin_window():
 @login_required
 @role_required('Administrator')
 def admin_roster(section_id):
-    cursor = get_db()
+    db = get_db()
+    cursor = db.cursor()
     cursor.execute('''
         SELECT s.courseCode, c.title, u.name as instructorName, sec.status, sec.currentEnrolled, sec.maxCapacity
         FROM Sections sec
@@ -420,7 +427,8 @@ def admin_override():
         student_email = request.form.get('student_email')
         course_code = request.form.get('course_code')
         
-        cursor = get_db()
+        db = get_db()
+        cursor = db.cursor()
         cursor.execute("SELECT userID FROM Users WHERE email = ? AND role = 'Student'", (student_email,))
         student = cursor.fetchone()
         
@@ -449,17 +457,16 @@ def admin_override():
             
         # Force Enroll
         import uuid
-        conn = DatabaseConnection.get_instance()
         try:
             cursor.execute("UPDATE Sections SET currentEnrolled = currentEnrolled + 1 WHERE sectionID = ?", (section['sectionID'],))
             cursor.execute('''
                 INSERT INTO EnrollmentRecords (enrollmentID, studentID, sectionID, enrollmentDate, status, isOverride) 
                 VALUES (?, ?, ?, ?, 'Override-Active', 1)
             ''', (str(uuid.uuid4()), student['userID'], section['sectionID'], datetime.now().strftime("%Y-%m-%d")))
-            conn.commit()
+            db.commit()
             flash(f"Override successful. Forced enrollment for {student_email} into {course_code}.", "success")
         except Exception as e:
-            conn.rollback()
+            db.rollback()
             flash(f"Database error during override: {str(e)}", "error")
             
         return redirect(url_for('admin_override'))
